@@ -5,9 +5,12 @@
 package it.polito.tdp.rivers;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import it.polito.tdp.rivers.model.Model;
+import it.polito.tdp.rivers.model.River;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -25,7 +28,7 @@ public class FXMLController {
     private URL location;
 
     @FXML // fx:id="boxRiver"
-    private ComboBox<?> boxRiver; // Value injected by FXMLLoader
+    private ComboBox<River> boxRiver; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtStartDate"
     private TextField txtStartDate; // Value injected by FXMLLoader
@@ -47,6 +50,44 @@ public class FXMLController {
 
     @FXML // fx:id="txtResult"
     private TextArea txtResult; // Value injected by FXMLLoader
+    
+    @FXML
+    void doSelezionaFiume(ActionEvent event) {
+
+    	River fiume = this.boxRiver.getValue();
+    	this.model.infoFiume(fiume);
+    	this.txtStartDate.setText(this.model.getPrimaMisurazione(fiume).toString());
+    	this.txtEndDate.setText(this.model.getUltimaMisurazione(fiume).toString());
+        this.txtNumMeasurements.setText(this.model.getnMisurazioni(fiume).toString());
+        this.txtFMed.setText(this.model.getAvgMisurazioni(fiume).toString());
+    }
+    
+    @FXML
+    void doSimula(ActionEvent event) {
+    	this.txtResult.clear();
+    	River fiume = this.boxRiver.getValue();
+    	if(fiume == null) {
+    		this.txtResult.setText("Devi selezionare un fiume.");
+    		return;
+    	}
+    	double k = 0.0; 
+    	try {
+    		k = Double.parseDouble(this.txtK.getText());
+    	}
+    	catch(NumberFormatException e) {
+    		e.printStackTrace();
+    		this.txtResult.setText("Devi inserire un valore numerico.");
+    		return;
+    	}
+    	if(k <= 0) {
+    		this.txtResult.setText("Devi inserire un valore positivo.");
+    	}
+    	this.model.simula(fiume, k);
+    	this.txtResult.appendText("Non si è potuta garantire l'erogazione minima per " +
+    			this.model.getGiorni() + " giorni.\n\n");
+    	this.txtResult.appendText("L'occupazione media del bacino nel corso della "
+    			+ "simulazione è " + this.model.getcMedia() + ".");
+    }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
     void initialize() {
@@ -62,5 +103,6 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+        this.boxRiver.getItems().addAll(this.model.getAllRivers());
     }
 }
